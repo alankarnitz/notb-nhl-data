@@ -1,0 +1,25 @@
+
+name: Refresh NHL mirror
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency: refresh
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 fetch_feeds.py
+      - name: Commit only if changed
+        run: |
+          git config user.name "nhl-mirror-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add schedule.json standings.json club-stats.json
+          git diff --cached --quiet || (git commit -m "Refresh NHL data" && git push)
